@@ -11,6 +11,23 @@ import configparser
 from datetime import date, datetime, timedelta
 import re
 
+def get_day_from_log(log_file= "CotD_Log.log"):
+    try:
+        with open (log_file, "r") as log:
+            lines= [line.strip() for line in log if line.strip()]
+            if not lines:
+                return 1 #default to 1 if no log
+            last_line= lines[-1]
+            match= re.search (r"Day:\s*(\d+)", last_line)
+            if match:
+                return int(match.group(1))+1
+    except FileNotFoundError:
+        print(f"{log_file} not found. Starting from Day 1.")
+        return 1 #Default to 1 if log doesn't exist
+    except Exception as e:
+        print(f"Error reading {log_file}: {e}")
+        return 1 #Default to 1 on error
+
 #load .env variables
 load_dotenv()
 CotD_Day= get_day_from_log()
@@ -41,23 +58,6 @@ def CotD_Logging(CotDinfo):
     with open("CotD_Log.log", "a") as log:
         log.write(f'Date: {date.today()}, Subreddit: {CotDinfo.subreddit.display_name}, Post ID: {CotDinfo.id}, Day: {CotD_Day}\n')
     CotD_Day+= 1
-
-def get_day_from_log(log_file= "CotD_Log.log"):
-    try:
-        with open (log_file, "r") as log:
-            lines= [line.strip() for line in log if line.strip()]
-            if not lines:
-                return 1 #default to 1 if no log
-            last_line= lines[-1]
-            match= re.search (r"Day:\s*(\d+)", last_line)
-            if match:
-                return int(match.group(1))+1
-    except FileNotFoundError:
-        print(f"{log_file} not found. Starting from Day 1.")
-        return 1 #Default to 1 if log doesn't exist
-    except Exception as e:
-        print(f"Error reading {log_file}: {e}")
-        return 1 #Default to 1 on error
 
 #grab information for async praw
 reddit= asyncpraw.Reddit(
