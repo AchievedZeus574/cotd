@@ -9,10 +9,11 @@ from random import choice
 import asyncio
 import configparser
 from datetime import date, datetime, timedelta
+import re
 
 #load .env variables
 load_dotenv()
-CotD_Day= int(os.getenv('START_DAY_NUMBER'))
+CotD_Day= get_day_from_log()
 
 #load config file
 config= configparser.ConfigParser()
@@ -39,8 +40,24 @@ def CotD_Logging(CotDinfo):
     global CotD_Day
     with open("CotD_Log.log", "a") as log:
         log.write(f'Date: {date.today()}, Subreddit: {CotDinfo.subreddit.display_name}, Post ID: {CotDinfo.id}, Day: {CotD_Day}\n')
-    CotD_Day= CotD_Day+1
-    print("CotD_Logging done")
+    CotD_Day+= 1
+
+def get_day_from_log(log_file= "CotD_Log.log"):
+    try:
+        with open (log_file, "r") as log:
+            lines= [line.strip() for line in log if line.strip()]
+            if not lines:
+                return 1 #default to 1 if no log
+            last_line= lines[-1]
+            match= re.search (r"Day:\s*(\d+)", last_line)
+            if match:
+                return int(match.group(1))+1
+    except FileNotFoundError:
+        print(f"{log_file} not found. Starting from Day 1.")
+        return 1 #Default to 1 if log doesn't exist
+    except Exception as e:
+        print(f"Error reading {log_file}: {e}")
+        return 1 #Default to 1 on error
 
 #grab information for async praw
 reddit= asyncpraw.Reddit(
@@ -57,7 +74,6 @@ async def fetch_subs():
 
 #grab random image from reddit specified by command
 async def post_grab(sub):
-    print("post_grab")
     try:
         subreddit= await reddit.subreddit(sub)
         posts= [
@@ -66,7 +82,6 @@ async def post_grab(sub):
         ]
         if posts:
             random_post= choice(posts)
-            print ("post_grab done")
             return random_post
         else:
             return f"No image posts found in r/{sub}."
@@ -76,7 +91,6 @@ async def post_grab(sub):
 #post CotD in channel of choosing and log it
 post_lock= asyncio.Lock()
 async def Post_CotD(CiD= CotD_CiD):
-    print ("Post_CotD")
     async with post_lock:
         try:
             CotD_channel= bot.get_channel(CiD)
@@ -85,15 +99,12 @@ async def Post_CotD(CiD= CotD_CiD):
                 return
             #get post from reddit and send it
             post= await post_grab(choice(SubList))
-            print ("Sending CotD")
             await CotD_channel.send(f'Cat of the Day {CotD_Day}: {post.title} \n{post.url}')
-            print ("Sent CotD")
             CotD_Logging(post)
         except ValueError:
             print(f'Invalid Channel ID')
         except Exception as e:
             print(f'Error: {e}')
-        print("Post_CotD done")
 
 #schedule the CotD Post to run once a day at PostTime
 autopost_task= None
@@ -171,7 +182,6 @@ async def CotDM(ctx):
     except Exception as e:
         logger.error(f"Error in /triggerpost: {e}")
         await ctx.followup.send(f"Error: {e}")
-    print ("triggerpost done")
 
 #run the bot
 bot.run(os.getenv('TOKEN'))
