@@ -15,10 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor == 'dependabot[bot]'
     steps:
+      - name: Install GitHub CLI
+        run: sudo apt update && sudo apt install -y gh
+
       - name: Enable auto-merge for Dependabot PRs
         run: gh pr merge --auto --squash "$PR_URL"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
         shell: bash
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
