@@ -53,7 +53,6 @@ logger.addHandler(handler)
 #enable logging for CotD autopost and increment counter
 CotD_Log= "CotD_Log.log"
 def CotD_Logging(CotDinfo):
-    print("CotD_Logging")
     global CotD_Day
     with open("CotD_Log.log", "a") as log:
         log.write(f'Date: {date.today()}, Subreddit: {CotDinfo.subreddit.display_name}, Post ID: {CotDinfo.id}, Day: {CotD_Day}\n')
