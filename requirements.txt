@@ -7,7 +7,7 @@ asyncpraw==7.8.1
 asyncprawcore==2.4.0
 attrs==24.2.0
 certifi==2024.12.14
-charset-normalizer==3.4.0
+charset-normalizer==3.4.1
 frozenlist==1.5.0
 idna==3.10
 multidict==6.1.0
