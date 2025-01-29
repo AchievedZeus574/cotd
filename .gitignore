@@ -8,3 +8,4 @@ clear.py
 discord.log
 CotD_Log.log
 .env
+cogs/__init__.py

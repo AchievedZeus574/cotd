@@ -121,19 +121,64 @@ async def autopost():
             logger.error(f'Error in autpost: {e}')
 
 #create bot and get it ready on startup
-bot= discord.Bot()
+class MyBot(discord.Bot):
+    async def setup_hook(self):
+        print("Attempting to load cogs...")  # Debugging message
+        try:
+            await self.load_extension("cogs.schedule")
+            print("Schedule Cog Loaded Successfully!")
+        except Exception as e:
+            print(f"Failed to load Schedule Cog: {e}")
 
+bot = MyBot(debug_guilds=[int(os.getenv('TARGET_GUILD_ID'))])
+bot.load_extension('cogs.schedule')
 @bot.event
 async def on_ready():
     global autopost_task
     global SUBREDDIT_LIST
     print(f'{bot.user} ready')
-    await bot.sync_commands()
+
+    await bot.sync_commands(force=True)
+    commands = await bot.http.get_global_commands(bot.application_id)
+    print(f"Registered Commands: {commands}")
+
+    print(f"Currently loaded extensions before loading: {bot.extensions.keys()}")
+
+    try:
+        await bot.load_extension("cogs.schedule")
+        print("Cog 'cogs.schedule' loaded successfully in on_ready()!")
+    except commands.ExtensionAlreadyLoaded:
+        print("Extension 'cogs.schedule' was already loaded.")
+    except commands.ExtensionNotFound:
+        print("Extension 'cogs.schedule' not found! Check your folder structure and path.")
+    except commands.NoEntryPointError:
+        print("Extension 'cogs.schedule' is missing a setup function.")
+    except commands.ExtensionFailed as e:
+        print(f"Extension 'cogs.schedule' failed to load: {e}")
+    except Exception as e:
+        print(f"Failed to load 'cogs.schedule' in on_ready(): {e}")
+    
     SUBREDDIT_LIST = await fetch_subs()
     if autopost_task is None or autopost_task.done():
         autopost_task= bot.loop.create_task(autopost())
 
 #commands for bot
+@bot.slash_command(name="reload_cogs", description="Reload all cogs")
+async def reload_cogs(ctx):
+    try:
+        await bot.reload_extension("cogs.schedule")
+        await ctx.respond("Cogs reloaded!")
+    except Exception as e:
+        await ctx.respond(f" Cogs failed to load: {e}", ephemeral= True)
+
+@bot.slash_command(name="sync", description="Force sync commands")
+async def sync(ctx):
+    #try:
+    await bot.sync_commands(force=True)
+    await ctx.respond("Commands synced!")
+    #except Exception as e:
+    #    await ctx.respond(f"Sync failed: {e}")
+
 @bot.slash_command(name="hello", description="say hi to Jeff")
 async def hello(ctx: discord.ApplicationContext):
     await ctx.respond("Hey, "+ randoms.aliase()+ "!")
@@ -183,4 +228,5 @@ async def CotDM(ctx):
         await ctx.followup.send(f"Error: {e}")
 
 #run the bot
+print(f"Loaded Extensions: {bot.extensions.keys()}")
 bot.run(os.getenv('TOKEN'))
