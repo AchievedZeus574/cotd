@@ -16,7 +16,7 @@ propcache==0.2.1
 py-cord==2.6.1
 python-dotenv==1.0.1
 requests==2.32.3
-typing_extensions==4.12.2
+typing_extensions==4.14.0
 update-checker==0.18.0
 urllib3==2.3.0
 websocket-client==1.8.0
