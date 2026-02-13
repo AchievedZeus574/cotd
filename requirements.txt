@@ -14,7 +14,7 @@ multidict==6.1.0
 prawcore==3.0.2
 propcache==0.2.1
 py-cord==2.6.1
-python-dotenv==1.0.1
+python-dotenv==1.2.1
 requests==2.32.3
 typing_extensions==4.12.2
 update-checker==0.18.0
